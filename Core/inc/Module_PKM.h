@@ -2,12 +2,11 @@
 #define INC_MODULE_PKM_H_
 
 
-#include "string.h"
+#include <string.h>
+#include "Registers.h"
 #include "stm32l053xx.h"
-
-
-#include "Driver_CRC.h"
-#include "Module_Registers.h"
+#include "Module_CRC.h"
+#include "Module_ADC.h"
 
 
 void Module_PKM_Enable(void);

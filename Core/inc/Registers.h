@@ -1,7 +1,9 @@
-#ifndef INC_MODULE_REGISTERS_H_
-#define INC_MODULE_REGISTERS_H_
+#ifndef INC_REGISTERS_H_
+#define INC_REGISTERS_H_
+
 
 #include "stm32l053xx.h"
+
 
 typedef struct
 {
@@ -81,5 +83,6 @@ Registers;
 
 extern volatile Registers registers;
 extern uint16_t* regs;
+
 
 #endif

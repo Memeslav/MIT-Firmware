@@ -32,7 +32,6 @@ void SPI2_Enable(void)
 				  |  SPI_CR1_SSM
 				  |  SPI_CR1_SSI;
 }
-
 void Module_FRAM_Enable(void)
 {
 	SPI2_Enable();

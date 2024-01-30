@@ -1,4 +1,5 @@
-#include "Module_Registers.h"
+#include "Registers.h"
+
 
 volatile Registers registers = 	{.module_info   = {1,		//serial_number
 										   	   	   4},		//program_version
@@ -6,11 +7,11 @@ volatile Registers registers = 	{.module_info   = {1,		//serial_number
 								 .unixtime 		= {0,		//lo
 												   0},		//hi
 
-								 .currents 		= {4095,	//minimal
+								 .currents 		= {0,		//minimal
 												   0,		//average
-												  -4095},	//maximal
+												   0},		//maximal
 
-								 .settings 		= {5000, 	//trigger_level
+								 .settings 		= {1000, 	//trigger_level
 												   0,		//minimal_pulse
 												   100,		//measur_period
 												   0},		//reset_setting
@@ -30,5 +31,6 @@ volatile Registers registers = 	{.module_info   = {1,		//serial_number
 												   0,		//time_duration
 												   0,		//maximal_amplitude
 												   0}};		//average_amplitude
+
 
 uint16_t* regs = (uint16_t*)&registers;
