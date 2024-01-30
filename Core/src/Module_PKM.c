@@ -10,11 +10,10 @@ typedef struct
 	uint16_t register_count;
 }
 Receive_buffer;
-
 Receive_buffer rx = {{0}, 0, 0, 0, 0};
 
 
-void SPI1_Enable (void)
+static void SPI1_Enable (void)
 {
     RCC->IOPENR   |= RCC_IOPENR_GPIOAEN;
 
@@ -47,12 +46,11 @@ void SPI1_Enable (void)
 	NVIC_SetPriority(SPI1_IRQn, 1);
 	NVIC_EnableIRQ(SPI1_IRQn);
 }
-
 void Module_PKM_Enable(void)
 {
-	Driver_CRC_Enable();
 	SPI1_Enable();
 }
+
 
 void EXTI4_15_IRQHandler(void)
 {
@@ -67,7 +65,6 @@ void EXTI4_15_IRQHandler(void)
 	}
 	NVIC_ClearPendingIRQ(EXTI4_15_IRQn);
 }
-
 void SPI1_IRQHandler(void)
 {
 	if(SPI1->SR & SPI_SR_RXNE)
@@ -121,6 +118,9 @@ void SPI1_IRQHandler(void)
 	        }
 			else if	(rx.index <  (2 + rx.register_count))
 	        {
+				Currents_Convert();
+				Impulse_Convert();
+
 				*((__IO uint16_t *)&CRC->DR) = __REV16(regs[rx.start_address]);
 									SPI1->DR = __REV16(regs[rx.start_address]);
 									rx.start_address++;

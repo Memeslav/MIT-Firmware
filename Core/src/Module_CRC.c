@@ -1,6 +1,6 @@
-#include "Driver_CRC.h"
+#include "Module_CRC.h"
 
-void Driver_CRC_Enable(void)
+void CRC_Enable(void)
 {
 	RCC->AHBENR |= RCC_AHBENR_CRCEN;
 

@@ -20,17 +20,22 @@ struct ADC_Data
 
 	int16_t signal;
 
+	int16_t trigger;
+
 	int64_t cur_sums;
 	int64_t cur_times;
+
+	Currents currents;
+
+	ADC_State state;
 
 	int64_t imp_sums;
 	int64_t imp_times;
 
-	ADC_State state;
-
-	Currents currents;
-
 	Impulse impulse;
+	Impulse buffer_impulse;
+
+	uint32_t impulse_counter;
 }
 ADC_Data = {0};
 
@@ -50,7 +55,6 @@ static void DMA1_Enable(void)
 							|  DMA_CCR_CIRC
 							|  DMA_CCR_EN;
 }
-
 static void ADC1_Enable(void)
 {
 	RCC->IOPENR  |= RCC_IOPENR_GPIOAEN
@@ -95,11 +99,27 @@ static void ADC1_Enable(void)
 	NVIC_SetPriority(ADC1_COMP_IRQn, 0);
 	NVIC_EnableIRQ(ADC1_COMP_IRQn);
 }
+static void TIM6_Enable(void)
+{
+	SystemCoreClockUpdate();
 
+	RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
+
+		TIM6->PSC = SystemCoreClock/1000 - 1;
+
+		TIM6->ARR = registers.settings.measur_period - 1;
+
+		TIM6->CNT = 0;
+
+		TIM6->CR2 = TIM_CR2_MMS_1;
+
+		TIM6->CR1 = TIM_CR1_CEN;
+}
 void Module_ADC_Enable(void)
 {
 	DMA1_Enable();
 	ADC1_Enable();
+	TIM6_Enable();
 }
 
 
@@ -107,14 +127,13 @@ static float From_level_to_mVolt(int level)
 {
 	return (100000 * ((supply/4096) * (level)/gain));
 }
-
 static int From_mVolt_to_level(float mVolt)
 {
 	return ((mVolt / 100000) * gain * 4096 / supply);
 }
 
 
-void static Currents_Update(void)
+static void Currents_Update(void)
 {
 	ADC_Data.cur_times++;
 	ADC_Data.cur_sums += ADC_Data.signal;
@@ -131,38 +150,68 @@ void static Currents_Update(void)
 
 	ADC_Data.currents.ave  =  ADC_Data.cur_sums / ADC_Data.cur_times;
 }
-
-void Currents_Reset(void)
+static void Currents_Reset(void)
 {
 	ADC_Data.cur_sums  = 0;
 	ADC_Data.cur_times = 0;
 
 	ADC_Data.currents.ave   = 0;
-	registers.currents.ave  = 0;
-
 	ADC_Data.currents.min   = 4095;
-	registers.currents.min  = 4095;
-
 	ADC_Data.currents.max   = -4095;
-	registers.currents.max  = -4095;
 }
-
 void Currents_Convert(void)
 {
 	registers.currents.min = From_level_to_mVolt(ADC_Data.currents.min);
 	registers.currents.ave = From_level_to_mVolt(ADC_Data.currents.ave);
 	registers.currents.max = From_level_to_mVolt(ADC_Data.currents.max);
+
+	Currents_Reset();
 }
 
 
-
-
-void Impulse_Start(void)
+static void Impulse_Reset(Impulse* impulse)
 {
+	memset(impulse, 0, sizeof(Impulse));
 
+	ADC_Data.imp_times = 0;
+	ADC_Data.imp_sums = 0;
 }
+static void Impulse_Record(void)
+{
+	ADC_Data.imp_sums += ADC_Data.signal;
+	ADC_Data.imp_times++;
 
-void Impulse_Update(void)
+	if (ADC_Data.signal > ADC_Data.impulse.max_amp)
+	{
+		ADC_Data.impulse.max_amp = ADC_Data.signal;
+	}
+
+	ADC_Data.impulse.ave_amp  = ADC_Data.imp_sums / ADC_Data.imp_times;
+}
+static void Impulse_Start(void)
+{
+	ADC_Data.impulse.start_lo = registers.unixtime.lo;
+	ADC_Data.impulse.start_hi = registers.unixtime.hi;
+
+	Impulse_Record();
+}
+static void Impulse_Saving(void)
+{
+	ADC_Data.impulse.duration = registers.settings.measur_period * ADC_Data.imp_times;
+
+	if(ADC_Data.buffer_impulse.duration <= ADC_Data.impulse.duration)
+	{
+		ADC_Data.impulse_counter++;
+
+		ADC_Data.impulse.num_lo = (uint16_t)(ADC_Data.impulse_counter & 0xFFFF);
+		ADC_Data.impulse.num_hi = (uint16_t)((ADC_Data.impulse_counter>>16) & 0xFFFF);
+
+		memcpy(&ADC_Data.buffer_impulse, &ADC_Data.impulse, sizeof(ADC_Data.impulse));
+	}
+
+	Impulse_Reset(&ADC_Data.impulse);
+}
+static void Impulse_Update(void)
 {
 	if(ADC_Data.state == OUTSIDE_THE_IMPULS)
 	{
@@ -170,33 +219,38 @@ void Impulse_Update(void)
 		{
 			ADC_Data.state = INSIDE_THE_IMPULS;
 
-			//Impulse_Start();
+			Impulse_Start();
 		}
 	}
 	else
 	{
-		//Impulse_Record();
+		Impulse_Record();
 
 		if(ADC_Data.signal < registers.settings.trigger_level)
 		{
-			//Impulse_Saving();
+			Impulse_Saving();
 
 			ADC_Data.state = OUTSIDE_THE_IMPULS;
 		}
 	}
 }
+void Impulse_Convert(void)
+{
+	ADC_Data.buffer_impulse.max_amp = From_level_to_mVolt(ADC_Data.buffer_impulse.max_amp);
+	ADC_Data.buffer_impulse.ave_amp = From_level_to_mVolt(ADC_Data.buffer_impulse.ave_amp);
 
+	memcpy((void *)&registers.impulse, &ADC_Data.buffer_impulse, sizeof(ADC_Data.buffer_impulse));
 
+	Impulse_Reset(&ADC_Data.buffer_impulse);
+}
 
 
 void Module_ADC_Settings_Update(void)
 {
-	registers.settings.trigger_level = From_mVolt_to_level(registers.settings.trigger_level);
+	ADC_Data.trigger = From_mVolt_to_level(registers.settings.trigger_level);
 
 	TIM6->ARR = registers.settings.measur_period - 1;
 }
-
-
 
 
 void ADC1_COMP_IRQHandler(void)
