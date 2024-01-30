@@ -53,6 +53,8 @@ void TIM2_IRQHandler(void)
 	{
 		if(++registers.unixtime.lo == 0xFFFF)
 		{	 registers.unixtime.hi ++;}
+
+		USART1->TDR = 0xAA;
 	}
 
 	TIM2->SR &= ~TIM_SR_UIF;
