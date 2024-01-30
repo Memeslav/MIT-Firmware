@@ -6,4 +6,7 @@
 #include "Module_FRAM.h"
 #include "Module_Registers.h"
 
+#include "Module_Clocks.h"
+#include "Module_ADC.h"
+
 #endif
