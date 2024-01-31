@@ -3,6 +3,8 @@
 
 
 #include "stm32l053xx.h"
+
+#include "Module_IWDG.h"
 #include "Registers.h"
 
 

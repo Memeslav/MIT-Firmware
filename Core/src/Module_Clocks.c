@@ -31,6 +31,8 @@ void TIM2_IRQHandler(void)
 	if(++registers.unixtime.lo == 0xFFFF)
 	{	 registers.unixtime.hi ++;}
 
+	IWDG_Update();
+
 	TIM2->SR &= ~TIM_SR_UIF;
 
 	NVIC_ClearPendingIRQ(TIM2_IRQn);

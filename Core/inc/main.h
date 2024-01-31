@@ -5,6 +5,7 @@
 #include "stm32l053xx.h"
 
 #include "Module_Clocks.h"
+#include "Module_IWDG.h"
 #include "Module_FRAM.h"
 #include "Module_UART.h"
 #include "Module_PKM.h"
