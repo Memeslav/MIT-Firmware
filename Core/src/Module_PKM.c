@@ -118,8 +118,11 @@ void SPI1_IRQHandler(void)
 	        }
 			else if	(rx.index <  (2 + rx.register_count))
 	        {
-				Currents_Convert();
-				Impulse_Convert();
+				if(rx.start_address == currents_minimal)
+				{Currents_Convert();}
+
+				if(rx.start_address == num_lo)
+				{Impulse_Convert();}
 
 				*((__IO uint16_t *)&CRC->DR) = __REV16(regs[rx.start_address]);
 									SPI1->DR = __REV16(regs[rx.start_address]);
