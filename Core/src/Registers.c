@@ -11,7 +11,7 @@ volatile Registers registers = 	{.module_info   = {1,		//serial_number
 												   0,		//average
 												   0},		//maximal
 
-								 .settings 		= {1000, 	//trigger_level
+								 .settings 		= {5000, 	//trigger_level
 												   0,		//minimal_pulse
 												   100,		//measur_period
 												   0},		//reset_setting

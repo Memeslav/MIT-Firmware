@@ -99,6 +99,18 @@ void SPI1_IRQHandler(void)
 					{
 						regs[i] = __REV16(rx.data[2 + increment]);
 
+						if((i == trigger_level) ||
+						   (i == minimal_pulse) ||
+						   (i == measur_period) ||
+						   (i == reset_setting))
+						{
+							Module_ADC_Settings_Update();
+						}
+						else if(i == display_lo)
+						{
+							Impulse_Convert();
+						}
+
 						increment++;
 					}
 				}
@@ -120,9 +132,6 @@ void SPI1_IRQHandler(void)
 	        {
 				if(rx.start_address == currents_minimal)
 				{Currents_Convert();}
-
-				if(rx.start_address == num_lo)
-				{Impulse_Convert();}
 
 				*((__IO uint16_t *)&CRC->DR) = __REV16(regs[rx.start_address]);
 									SPI1->DR = __REV16(regs[rx.start_address]);

@@ -5,6 +5,9 @@
 #define gain  27
 
 
+static void Currents_Reset(void);
+
+
 typedef enum
 {
 	OUTSIDE_THE_IMPULS,
@@ -35,6 +38,7 @@ struct ADC_Data
 	Impulse impulse;
 	Impulse buffer_impulse;
 
+	uint32_t last_readed;
 	uint32_t impulse_counter;
 }
 ADC_Data = {0};
@@ -120,6 +124,11 @@ void Module_ADC_Enable(void)
 	DMA1_Enable();
 	ADC1_Enable();
 	TIM6_Enable();
+
+	ADC_Data.impulse_counter = 1;
+
+	Currents_Reset();
+	Module_ADC_Settings_Update();
 }
 
 
@@ -201,7 +210,13 @@ static void Impulse_Saving(void)
 
 	if(ADC_Data.buffer_impulse.duration <= ADC_Data.impulse.duration)
 	{
+		ADC_Data.last_readed = ADC_Data.impulse_counter - 1;
+		registers.controls.last_readed_lo = (uint16_t)(ADC_Data.last_readed & 0xFFFF);
+		registers.controls.last_readed_hi = (uint16_t)((ADC_Data.last_readed>>16) & 0xFFFF);
+
 		ADC_Data.impulse_counter++;
+		registers.controls.global_counter_lo = (uint16_t)(ADC_Data.impulse_counter & 0xFFFF);
+		registers.controls.global_counter_hi = (uint16_t)((ADC_Data.impulse_counter>>16) & 0xFFFF);
 
 		ADC_Data.impulse.num_lo = (uint16_t)(ADC_Data.impulse_counter & 0xFFFF);
 		ADC_Data.impulse.num_hi = (uint16_t)((ADC_Data.impulse_counter>>16) & 0xFFFF);
@@ -215,7 +230,7 @@ static void Impulse_Update(void)
 {
 	if(ADC_Data.state == OUTSIDE_THE_IMPULS)
 	{
-		if(ADC_Data.signal >= registers.settings.trigger_level)
+		if(ADC_Data.signal >= ADC_Data.trigger)
 		{
 			ADC_Data.state = INSIDE_THE_IMPULS;
 
@@ -226,7 +241,7 @@ static void Impulse_Update(void)
 	{
 		Impulse_Record();
 
-		if(ADC_Data.signal < registers.settings.trigger_level)
+		if(ADC_Data.signal < ADC_Data.trigger)
 		{
 			Impulse_Saving();
 
