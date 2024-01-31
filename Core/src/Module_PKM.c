@@ -43,7 +43,7 @@ static void SPI1_Enable (void)
 				  |  SPI_CR1_DFF
 				  |  SPI_CR1_SPE;
 
-	NVIC_SetPriority(SPI1_IRQn, 1);
+	NVIC_SetPriority(SPI1_IRQn, 2);
 	NVIC_EnableIRQ(SPI1_IRQn);
 }
 void Module_PKM_Enable(void)

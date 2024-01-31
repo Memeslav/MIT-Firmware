@@ -6,6 +6,7 @@
 
 #include "Module_Clocks.h"
 #include "Module_FRAM.h"
+#include "Module_UART.h"
 #include "Module_PKM.h"
 #include "Module_ADC.h"
 #include "Module_CRC.h"
