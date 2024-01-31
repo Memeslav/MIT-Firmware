@@ -214,12 +214,12 @@ static void Impulse_Saving(void)
 		registers.controls.last_readed_lo = (uint16_t)(ADC_Data.last_readed & 0xFFFF);
 		registers.controls.last_readed_hi = (uint16_t)((ADC_Data.last_readed>>16) & 0xFFFF);
 
+		ADC_Data.impulse.num_lo = (uint16_t)(ADC_Data.impulse_counter & 0xFFFF);
+		ADC_Data.impulse.num_hi = (uint16_t)((ADC_Data.impulse_counter>>16) & 0xFFFF);
+
 		ADC_Data.impulse_counter++;
 		registers.controls.global_counter_lo = (uint16_t)(ADC_Data.impulse_counter & 0xFFFF);
 		registers.controls.global_counter_hi = (uint16_t)((ADC_Data.impulse_counter>>16) & 0xFFFF);
-
-		ADC_Data.impulse.num_lo = (uint16_t)(ADC_Data.impulse_counter & 0xFFFF);
-		ADC_Data.impulse.num_hi = (uint16_t)((ADC_Data.impulse_counter>>16) & 0xFFFF);
 
 		memcpy(&ADC_Data.buffer_impulse, &ADC_Data.impulse, sizeof(ADC_Data.impulse));
 	}
