@@ -206,7 +206,7 @@ static void Impulse_Start(void)
 }
 static void Impulse_Saving(void)
 {
-	ADC_Data.impulse.duration = registers.settings.measur_period * ADC_Data.imp_times;
+	ADC_Data.impulse.duration = ADC_Data.imp_times;
 
 	if(ADC_Data.buffer_impulse.duration <= ADC_Data.impulse.duration)
 	{
